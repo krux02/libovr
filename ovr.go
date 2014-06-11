@@ -2,268 +2,105 @@ package ovr
 
 //#cgo LDFLAGS: -lovr -ludev -lGL -lX11 -lm -lstdc++ -lXrandr -LLib/Linux/Release/x86_64/
 //#include "OVR_CAPI.h"
-//
 import "C"
 
 import "unsafe"
 
-// 2D integer
-type Vector2i struct { X,Y int32 }
-type Sizei struct { W,H int32 }
-type Recti struct {	Pos Vector2i;	Size Sizei}
-type Quatf struct {    X,Y,Z,W float32}
-type Vector2f struct {X,Y float32}
-type Vector3f struct {X,Y,Z float32}
-type Matrix4f [4][4]float32
-type Posef struct{
-	Orientation Quatf
-	Position Vector3f
-}
-type PoseStatef struct {
-    Pose  ovrPosef     
-    AngularVelocity  Vector3f  
-    LinearVelocity  
-    AngularAcceleration  
-    LinearAcceleration  
-    TimeInSeconds float64         // Absolute time of this state sample.  double       
+func vector2f(that C.ovrVector2f) (this Vector2f) {
+	this.X = float32(that.x)
+	this.Y = float32(that.y)
+	return
 }
 
-
-// Specifies which eye is being used for rendering.
-// This type explicitly does not include a third "NoStereo" option, as such is
-// not required for an HMD-centered API.
-type EyeType uint
-const ( 
-    EyeLeft  EyeType = 0
-    EyeRight EyeType = 1
-    EyeCount EyeType = 2
-)
-
-
-type FovPort struct {
-     UpTan
-     DownTan
-     LeftTan
-     RightTan float32
+func vector3f(that C.ovrVector3f) (this Vector3f) {
+	this.X = float32(that.x)
+	this.Y = float32(that.y)
+	this.Z = float32(that.z)
+	return
 }
 
-type HmdType uint
-
-const (
-    Hmd_None = HmdType(C.ovrHmd_None)
-    Hmd_DK1 = HmdType(C.ovrHmd_DK1)
-    Hmd_DKHD = HmdType(C.ovrHmd_DKHD)
-    Hmd_CrystalCoveProto = HmdType(C.ovrHmd_CrystalCoveProto)
-    Hmd_DK2 = HmdType(C.ovrHmd_DK2)
-    Hmd_Other = HmdType(C.ovrHmd_Other)
-)
-
-type HmdCaps uint
-
-const (
-    HmdCap_Present = HmdCaps(C.ovrHmdCap_Present)
-    HmdCap_Available = HmdCaps(C.ovrHmdCap_Available)
-    HmdCap_LowPersistence = HmdCaps(C.ovrHmdCap_LowPersistence)
-	HmdCap_LatencyTest = HmdCaps(C.ovrHmdCap_LatencyTest)
-    HmdCap_DynamicPrediction = HmdCaps(C.ovrHmdCap_DynamicPrediction)
-    HmdCap_NoVSync = HmdCaps(C.ovrHmdCap_NoVSync)
-	HmdCap_NoRestore = HmdCaps(C.ovrHmdCap_NoRestore)
-    HmdCap_Writable_Mask = HmdCaps(C.ovrHmdCap_Writable_Mask)
-)
-
-
-// Sensor capability bits reported by device.
-// Used with ovrHmd_StartSensor.
-type SensorCaps uint
-
-const (
-    SensorCap_Orientation = SensorCaps(C.ovrSensorCap_Orientation)
-    SensorCap_YawCorrection = SensorCaps(C.ovrSensorCap_YawCorrection)
-    SensorCap_Position = SensorCaps(C.ovrSensorCap_Position)
-)
-
-type DistortionCaps uint
-
-const (        
-    DistortionCap_Chromatic = DistortionCaps(C.ovrDistortionCap_Chromatic)
-    DistortionCap_TimeWarp = DistortionCaps(C.ovrDistortionCap_TimeWarp)
-    DistortionCap_Vignette = DistortionCaps(C.ovrDistortionCap_Vignette)
-)
-
-
-// This is a complete descriptor of the HMD.
-type HmdDesc struct {
-    Handle *Hmd;  // Handle of this HMD.
-    Type HmdType;
-    
-    ProductName, Manufacturer string
-
-    // Capability bits described by ovrHmdCaps.
-    HmdCaps HmdCaps
-	// Capability bits described by ovrSensorCaps.
-    SensorCaps SensorCaps
-    // Capability bits described by ovrDistortionCaps.
-    DistortionCaps DistortionCaps;
-
-    // Resolution of the entire HMD screen (for both eyes) in pixels.
-    Sizei    Resolution;
-    Vector2i WindowsPos;     
-
-    // These define the recommended and maximum optical FOVs for the HMD.    
-    DefaultEyeFov [Eye_Count]FovPort
-    MaxEyeFov [Eye_Count]FovPort
-    EyeRenderOrder [ovrEye_Count]EyeType
-    
-    DisplayDeviceName string
-    DisplayId int
+func vector2i(that C.ovrVector2i) (this Vector2i) {
+	this.X = int32(that.x)
+	this.Y = int32(that.y)
+	return
 }
 
-func (this *HmdDesc) Init(that *C.ovrHmdDesc) {
-	this.Handle = that.Handle
-	this.Type = HmdType(that.Type)
-	this.ProductName = C.GoString(that.ProductName)
-	this.Manufacturer = C.GoString(that.Manufacturer)
-	this.HmdCaps = HmdCaps(that.HmdCaps)
-	this.SensorCaps = SensorCaps(that.SensorCaps)
-	this.Resolution = Sizei(that.Resolution)
-	this.WindowPos = Vector2i(that.WindowPos)
-	for i:=0;i<2;i++{
-		this.DefaultEyeFov[i] = that.DefaultEyeFov[i]
-		this.MaxEyeFov[i] = that.MaxEyeFov[i]
-		this.EyeRenderOrder[i] = that.EyeRenderOrder[i]
-	}
-	this.DisplayDeviceName = C.GoString(that.DisplayDeviceName)
-	DisplayId = int(that.DisplayId)
+func quatf(that C.ovrQuatf) (this Quatf) {
+	this.X = float32(that.x)
+	this.Y = float32(that.y)
+	this.Z = float32(that.z)
+	this.W = float32(that.w)
+	return
 }
 
-type StatusBits uint
+func fovPort(that C.ovrFovPort) (this FovPort) {
+	this.DownTan = float32(that.DownTan)
+	this.LeftTan = float32(that.LeftTan)
+	this.RightTan = float32(that.RightTan)
+	this.UpTan = float32(that.UpTan)
+	return
+}
 
-const (
-    Status_OrientationTracked = StatusBits(C.ovrStatus_OrientationTracked)
-    Status_PositionTracked = StatusBits(C.ovrStatus_PositionTracked)
-    Status_PositionConnected = StatusBits(C.ovrStatus_PositionConnected)
-    Status_HmdConnected = StatusBits(C.ovrStatus_HmdConnected)
-)
+func sensorState(that C.ovrSensorState) (this SensorState) {
+	this.Predicted = poseState(that.Predicted)
+	this.Recorded = poseState(that.Recorded)
+	this.StatusFlags = StatusBits(that.StatusFlags)
+	this.Temperature = float32(that.Temperature)
+	return
+}
 
+func poseState(that C.ovrPoseStatef) (this PoseStatef) {
+	this.Pose = posef(that.Pose)
+	this.AngularVelocity = vector3f(that.AngularVelocity)
+	this.LinearVelocity = vector3f(that.LinearVelocity)
+	this.AngularAcceleration = vector3f(that.AngularAcceleration)
+	this.LinearAcceleration = vector3f(that.LinearAcceleration)
+	this.TimeInSeconds = float64(that.TimeInSeconds)
+	return
+}
 
-type SensorState struct {
-   Predicted, Recorded PoseStatef
-   Temperature float32
-   StatusFlags StatusBits;
+func posef(that C.ovrPosef) (this Posef) {
+	this.Orientation = quatf(that.Orientation)
+	this.Position = vector3f(that.Position)
+	return
+}
+
+func sizei(that C.ovrSizei) (this Sizei) {
+	this.W = int32(that.w)
+	this.H = int32(that.h)
+	return
 }
 
 func (this *SensorState) cptr() *C.ovrSensorState {
-	return (*C.ovrSensorState)(this)
-}
-
-
-// For now.
-// TBD: Decide if this becomes a part of HMDDesc
-type SensorDesc struct {
-    VendorId,   ProductId int16
-    SerialNumber [24]byte;
+	return (*C.ovrSensorState)(unsafe.Pointer(this))
 }
 
 func (this *SensorDesc) cptr() *C.ovrSensorDesc {
-	return (*C.ovrSensorDesc)(this)
-}
-
-// Frame data reported by ovrHmd_BeginFrameTiming().
-type FrameTiming struct {
-    DeltaSeconds float32;
-    ThisFrameSeconds float64
-    TimewarpPointSeconds float64
-    NextFrameSeconds float64
-    ScanoutMidpointSeconds float64
-    EyeScanoutSeconds [2]float64
+	return (*C.ovrSensorDesc)(unsafe.Pointer(this))
 }
 
 func (this *FrameTiming) cptr() *C.ovrFrameTiming {
-	return (*C.ovrFrameTiming)(this)
-}
-
-
-
-// Rendering information for each eye, computed by either ovrHmd_ConfigureRendering().
-// or ovrHmd_GetRenderDesc() based on the specified Fov.
-// Note that the rendering viewport is not included here as it can be 
-// specified separately and modified per frame though:
-//    (a) calling ovrHmd_GetRenderScaleAndOffset with game-rendered api,
-// or (b) passing different values in ovrTexture in case of SDK-rendered distortion.
-type EyeRenderDesc struct {    
-      Eye EyeType
-      Fov FovPort
-		DistortedViewport Recti 	        // Distortion viewport 
-     PixelsPerTanAngleAtCenter Vector2f  // How many display pixels will fit in tan(angle) = 1.
-     ViewAdjust Vector3f  		        // Translation to be applied to view matrix.
+	return (*C.ovrFrameTiming)(unsafe.Pointer(this))
 }
 
 func (this *EyeRenderDesc) cptr() *C.ovrEyeRenderDesc {
-	return (*C.EyeRenderDesc)(this)
+	return (*C.ovrEyeRenderDesc)(unsafe.Pointer(this))
 }
 
-//-----------------------------------------------------------------------------------
-// ***** Platform-independent Rendering Configuration
-
-// These types are used to hide platform-specific details when passing
-// render device, OS and texture data to the APIs.
-//
-// The benefit of having these wrappers vs. platform-specific API functions is
-// that they allow game glue code to be portable. A typical example is an
-// engine that has multiple back ends, say GL and D3D. Portable code that calls
-// these back ends may also use LibOVR. To do this, back ends can be modified
-// to return portable types such as ovrTexture and ovrRenderAPIConfig.
-
-type RenderApiType uint
-const (
-    RenderAPI_None = RenderApiType(C.ovrRenderAPI_None)
-    RenderAPI_OpenGL = RenderApiType(C.ovrRenderAPI_OpenGL)
-    RenderAPI_Android_GLES = RenderApiType(C.ovrRenderAPI_Android_GLES)
-    RenderAPI_D3D9 = RenderApiType(C.ovrRenderAPI_D3D9)
-    RenderAPI_D3D10 = RenderApiType(C.ovrRenderAPI_D3D10)
-    RenderAPI_D3D11 = RenderApiType(C.ovrRenderAPI_D3D11)
-    RenderAPI_Count = RenderApiType(C.ovrRenderAPI_Count)
-)
-
-type RenderAPIConfigHeader struct {
-     API RenderAPIType
-             RTSize Sizei
-    Multisample int32
+func (this *RenderApiConfigHeader) cptr() *C.ovrRenderAPIConfigHeader {
+	return (*C.ovrRenderAPIConfigHeader)(unsafe.Pointer(this))
 }
 
-func (this *RenderAPIConfigHeader) cptr() *C.RenderAPIConfigHeader {
-	return (*C.ovrRenderAPIConfigHeader)(this)
-}
-
-
-type RenderAPIConfig struct {
-    Header RenderAPIConfigHeader
-    PlatformData [8]uintptr
-}
-
-func (this *RenderAPIConfig) cptr() *C.ovrRenderAPIConfig {
-	return (*C.ovrRenderAPIConfig)(this)
-}
-
-
-type TextureHeader struct {
-     API     RenderAPIType
-             TextureSize Sizei
-             RenderViewport Recti
+func (this *RenderApiConfig) cptr() *C.ovrRenderAPIConfig {
+	return (*C.ovrRenderAPIConfig)(unsafe.Pointer(this))
 }
 
 func (this *TextureHeader) cptr() *C.ovrTextureHeader {
-	return (*C.ovrTextureHeader)(this)
-}
-
-
-type Texture struct {
-    Header TextureHeader
-    PlatformData [8]uintptr
+	return (*C.ovrTextureHeader)(unsafe.Pointer(this))
 }
 
 func (this *Texture) cptr() *C.ovrTexture {
-	return (*C.ovrTexture)(this)
+	return (*C.ovrTexture)(unsafe.Pointer(this))
 }
 
 // -----------------------------------------------------------------------------------
@@ -293,9 +130,9 @@ func (this *Texture) cptr() *C.ovrTexture {
 //  10. ovr_Shutdown()
 //
 
-
 // Library init/shutdown, must be called around all other OVR code.
 // No other functions calls are allowed before ovr_Initialize succeeds or after ovr_Shutdown.
+
 func Initialize() bool {
 	return C.ovr_Initialize() != 0
 }
@@ -310,16 +147,6 @@ func Hmd_Detect() int {
 	return int(C.ovrHmd_Detect())
 }
 
-type Hmd C.struct_ovrHmdStruct
-
-func hmd(h C.ovrHmd) *Hmd {
-	return (*Hmd)((*C.struct_ovrHmdStruct)(h))
-}
-
-func (this *Hmd) hmd() C.ovrHmd {
-	return C.ovrHmd((*C.struct_ovrHmdStruct)(this))
-}
-
 // Creates a handle to an HMD and optionally fills in data about it.
 // Index can [0 .. ovrHmd_Detect()-1]; index mappings can cange after each ovrHmd_Detect call.
 // If not null, returned handle must be freed with ovrHmd_Destroy.
@@ -328,18 +155,16 @@ func HmdCreate(index int) *Hmd {
 }
 
 func (this *Hmd) Destroy() {
-	C.ovrHmd_Destroy(this.hmd())
+	C.ovrHmd_Destroy(this.cptr())
 }
 
-
 //ovrHmd   ovrHmd_CreateDebug(ovrHmdType type);
-
 
 // Returns last error for HMD state. Returns null for no error.
 // String is valid until next call or GetLastError or HMD is destroyed.
 // Pass null hmd to get global error (for create, etc).
 func (this *Hmd) GetLastError() string {
-	return C.GoString(C.ovrHmd_GetLastError(this.hmd()))
+	return C.GoString(C.ovrHmd_GetLastError(this.cptr()))
 }
 
 //-------------------------------------------------------------------------------------
@@ -347,14 +172,14 @@ func (this *Hmd) GetLastError() string {
 // Returns capability bits that are enabled at this time; described by ovrHmdCaps.
 // Note that this value is different font ovrHmdDesc::HmdCaps, which describes what
 // capabilities are available.
-func (this *Hmd) GetEnabledCaps(hmd overHmd) uint {
-	return uint(C.ovrHmd_GetEnabledCaps(hmd.hmd()))
+func (this *Hmd) GetEnabledCaps() uint {
+	return uint(C.ovrHmd_GetEnabledCaps(this.cptr()))
 }
 
 // Modifies capability bits described by ovrHmdCaps that can be modified,
 // such as ovrHmd_LowPersistance.
 func (this *Hmd) SetEnabledCaps(hmdCaps uint) {
-	C.ovrHmd_SetEnabledCaps(this.hmd(), C.uint(hmdCaps))
+	C.ovrHmd_SetEnabledCaps(this.cptr(), C.uint(hmdCaps))
 }
 
 //-------------------------------------------------------------------------------------
@@ -363,7 +188,7 @@ func (this *Hmd) SetEnabledCaps(hmdCaps uint) {
 // All sensor interface functions are thread-safe, allowing sensor state to be sampled
 // from different threads.
 // Starts sensor sampling, enabling specified capabilities, described by ovrSensorCaps.
-//  - supportedSensorCaps specifies support that is requested. The function will succeed 
+//  - supportedSensorCaps specifies support that is requested. The function will succeed
 //	  even if these caps are not available (i.e. sensor or camera is unplugged). Support
 //    will automatically be enabled if such device is plugged in later. Software should
 //    check ovrSensorState.StatusFlags for real-time status.
@@ -371,18 +196,18 @@ func (this *Hmd) SetEnabledCaps(hmdCaps uint) {
 //    If they are not available, the function will fail. Pass 0 if only specifying
 //    supportedSensorCaps.
 func (this *Hmd) StartSensor(supportedSensorCaps, requiredSensorCaps uint) bool {
-	return 0 != C.ovrHmd_StartSensor(hmd.hmd(),	C.uint(supportedSensorCaps), C.uint(requiredSensorCaps))
+	return 0 != C.ovrHmd_StartSensor(this.cptr(), C.uint(supportedSensorCaps), C.uint(requiredSensorCaps))
 }
 
 // Stops sensor sampling, shutting down internal resources.
 
 func (this *Hmd) StopSensor() {
-	C.ovrHmd_StopSensor(hmd.hmd())
+	C.ovrHmd_StopSensor(this.cptr())
 }
 
 // Resets sensor orientation.
 func (this *Hmd) ResetSensor() {
-	C.ovrHmd_ResetSensor(hmd.hmd())
+	C.ovrHmd_ResetSensor(this.cptr())
 }
 
 // Returns sensor state reading based on the specified absolute system time.
@@ -391,27 +216,36 @@ func (this *Hmd) ResetSensor() {
 // ovrHmd_GetEyePredictedSensorState relies on this internally.
 // This may also be used for more refined timing of FrontBuffer rendering logic, etc.
 func (hmd *Hmd) GetSensorState(absTime float64) SensorState {
-	return SensorState(C.ovrHmd_GetSensorState(hmd.hmd(), C.double(absTime)))
+	return sensorState(C.ovrHmd_GetSensorState(hmd.cptr(), C.double(absTime)))
 }
 
 // Returns information about a sensor.
 // Only valid after StartSensor.
-func (this *Hmd) GetSensorDesc(descOut *SensorDesc) {
-	return bool(C.ovrHmd_GetSensorDesc(hmd.hmd(), descOut.cptr()))
+func (this *Hmd) GetSensorDesc(descOut *SensorDesc) bool {
+	return 0 != C.ovrHmd_GetSensorDesc(this.cptr(), descOut.cptr())
 }
 
-
-OVR_EXPORT void     ovrHmd_GetDesc(ovrHmd hmd, ovrHmdDesc* desc);
-OVR_EXPORT void     ovrHmd_GetDesc(ovrHmd hmd, ovrHmdDesc* desc);
+func (this *Hmd) GetDesc() (desc HmdDesc) {
+	var cdesc C.ovrHmdDesc
+	C.ovrHmd_GetDesc(this.cptr(), &cdesc)
+	desc.Init(&cdesc)
+	return
+}
 
 // Calculates texture size recommended for rendering one eye within HMD, given FOV cone.
 // Higher FOV will generally require larger textures to maintain quality.
 //  - pixelsPerDisplayPixel specifies that number of render target pixels per display
 //    pixel at center of distortion; 1.0 is the default value. Lower values
 //    can improve performance.
-OVR_EXPORT ovrSizei ovrHmd_GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
-OVR_EXPORT ovrSizei ovrHmd_GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovrFovPort fov, float pixelsPerDisplayPixel);
-                                             
+func (hmd *Hmd) GetFovTextureSize(eye EyeType, fov FovPort, pixelsPerDisplayPixel float32) Sizei {
+	var cFov C.ovrFovPort
+	cFov.DownTan = C.float(fov.DownTan)
+	cFov.LeftTan = C.float(fov.LeftTan)
+	cFov.RightTan = C.float(fov.RightTan)
+	cFov.UpTan = C.float(fov.UpTan)
+	return sizei(C.ovrHmd_GetFovTextureSize(hmd.cptr(), C.ovrEyeType(eye), cFov, C.float(pixelsPerDisplayPixel)))
+}
+
 //-------------------------------------------------------------------------------------
 // *****  Rendering API Thread Safety
 
@@ -430,7 +264,6 @@ OVR_EXPORT ovrSizei ovrHmd_GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovrFovP
 //    - ovrHmd_GetEyePose
 //    - ovrHmd_GetEyeTimewarpMatrices
 
-
 //-------------------------------------------------------------------------------------
 // *****  SDK-Rendering Functions
 
@@ -438,7 +271,6 @@ OVR_EXPORT ovrSizei ovrHmd_GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovrFovP
 // access to the underlying rendering HW, such as D3D or GL.
 // This is the recommended approach, as it allows for better support or future
 // Oculus hardware and a range of low-level optimizations.
-
 
 // Configures rendering; fills in computed render parameters.
 // This function can be called multiple times to change rendering settings.
@@ -449,14 +281,16 @@ OVR_EXPORT ovrSizei ovrHmd_GetFovTextureSize(ovrHmd hmd, ovrEyeType eye, ovrFovP
 //    to shutdown rendering and release all resources.
 //  - distortionCaps describe distortion settings that will be applied.
 //
-OVR_EXPORT ovrBool ovrHmd_ConfigureRendering( ovrHmd hmd, 
-											const ovrRenderAPIConfig* apiConfig,                                              
+
+/*
+OVR_EXPORT ovrBool ovrHmd_ConfigureRendering( ovrHmd hmd,
+											const ovrRenderAPIConfig* apiConfig,
                                             unsigned int distortionCaps,
                                             const ovrFovPort eyeFovIn[2],
                                             ovrEyeRenderDesc eyeRenderDescOut[2] );
 
 OVR_EXPORT ovrBool ovrHmd_ConfigureRendering( ovrHmd hmd,
-                                            const ovrRenderAPIConfig* apiConfig,                                              
+                                            const ovrRenderAPIConfig* apiConfig,
                                             unsigned int distortionCaps,
                                             const ovrFovPort eyeFovIn[2],
                                             ovrEyeRenderDesc eyeRenderDescOut[2] );
@@ -470,7 +304,7 @@ OVR_EXPORT ovrFrameTiming ovrHmd_BeginFrame(ovrHmd hmd, unsigned int frameIndex)
 OVR_EXPORT ovrFrameTiming ovrHmd_BeginFrame(ovrHmd hmd, unsigned int frameIndex);
 
 // Ends frame, rendering textures to frame buffer. This may perform distortion and scaling
-// internally, assuming is it not delegated to another thread. 
+// internally, assuming is it not delegated to another thread.
 // Must be called on the same thread as BeginFrame. Calls ovrHmd_BeginEndTiming internally.
 // *** This Function will to Present/SwapBuffers and potentially wait for GPU Sync ***.
 OVR_EXPORT void     ovrHmd_EndFrame(ovrHmd hmd);
@@ -495,7 +329,7 @@ OVR_EXPORT ovrPosef ovrHmd_BeginEyeRender(ovrHmd hmd, ovrEyeType eye);
 // be different if a different pose was used for rendering.
 OVR_EXPORT void     ovrHmd_EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrTexture* eyeTexture);
 OVR_EXPORT void     ovrHmd_EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrTexture* eyeTexture);
-                                        
+
 //-------------------------------------------------------------------------------------
 // *****  Game-Side Rendering Functions
 
@@ -504,14 +338,14 @@ OVR_EXPORT void     ovrHmd_EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef ren
 //
 //  1. Setup ovrEyeDesc based on desired texture size and Fov.
 //     Call ovrHmd_GetRenderDesc to get the necessary rendering parameters for each eye.
-// 
+//
 //  2. Use ovrHmd_CreateDistortionMesh to generate distortion mesh.
 //
 //  3. Use ovrHmd_BeginFrameTiming, ovrHmd_GetEyePose and ovrHmd_BeginFrameTiming
 //     in the rendering loop to obtain timing and predicted view orientation for
 //     each eye.
 //      - If relying on timewarp, use ovr_WaitTillTime after rendering+flush, followed
-//        by ovrHmd_GetEyeTimewarpMatrices to obtain timewarp matrices used 
+//        by ovrHmd_GetEyeTimewarpMatrices to obtain timewarp matrices used
 //        in distortion pixel shader to reduce latency.
 //
 
@@ -533,7 +367,7 @@ typedef struct ovrDistortionVertex_
     float       VignetteFactor;  // Vignette fade factor. Can be encoded in Pos.w.
     ovrVector2f TexR;
     ovrVector2f TexG;
-    ovrVector2f TexB;    
+    ovrVector2f TexB;
 } ovrDistortionVertex;
 
 // Describes a full set of distortion mesh data, filled in by ovrHmd_CreateDistortionMesh.
@@ -576,32 +410,32 @@ OVR_EXPORT void     ovrHmd_GetRenderScaleAndOffset( ovrFovPort fov, ovrSizei tex
 
 // Thread-safe timing function for the main thread. Caller should increment frameIndex
 // with every frame and pass the index to RenderThread for processing.
-func (hmd *Hmd) GetFrameTiming(hmd.hmd(), frameIndex uint);
+func (hmd *Hmd) GetFrameTiming(hmd.cptr(), frameIndex uint);
 OVR_EXPORT ovrFrameTiming ovrHmd_GetFrameTiming(ovrHmd hmd, unsigned int frameIndex);
 
 // Called at the beginning of the frame on the Render Thread.
 // Pass frameIndex == 0 if ovrHmd_GetFrameTiming isn't being used. Otherwise,
 // pass the same frame index as was used for GetFrameTiming on the main thread.
-func (hmd *Hmd) BeginFrameTiming(hmd.hmd(), frameIndex uint);
+func (hmd *Hmd) BeginFrameTiming(hmd.cptr(), frameIndex uint);
 OVR_EXPORT ovrFrameTiming ovrHmd_BeginFrameTiming(ovrHmd hmd, unsigned int frameIndex);
 
 // Marks the end of game-rendered frame, tracking the necessary timing information. This
 // function must be called immediately after Present/SwapBuffers + GPU sync. GPU sync is important
 // before this call to reduce latency and ensure proper timing.
 func (hmd *Hmd) EndFrameTiming() {
-	C.ovrHmd_EndFrameTiming(hmd.hmd());
+	C.ovrHmd_EndFrameTiming(hmd.cptr());
 }
 
 // Initializes and resets frame time tracking. This is typically not necessary, but
 // is helpful if game changes vsync state or video mode. vsync is assumed to be on if this
 // isn't called. Resets internal frame index to the specified number.
 func (hmd *Hmd) ResetFrameTiming(frameIndex uint) {
-	C.ResetFrameTiming(hmd.hmd(), C.uint(frameIndex))
+	C.ResetFrameTiming(hmd.cptr(), C.uint(frameIndex))
 }
 
 // Predicts and returns Pose that should be used rendering the specified eye.
 // Must be called between ovrHmd_BeginFrameTiming & ovrHmd_EndFrameTiming.
-func (hmd *Hmd) GetEyePose(ovrEyeType eye){ 
+func (hmd *Hmd) GetEyePose(ovrEyeType eye){
 	OVR_EXPORT ovrPosef ovrHmd_GetEyePose(ovrHmd hmd, ovrEyeType eye);
 }
 
@@ -610,7 +444,7 @@ func (hmd *Hmd) GetEyePose(ovrEyeType eye){
 // The ovrDistortionVertex::TimeWarpFactor is used to blend between the matrices,
 // usually representing two different sides of the screen.
 // Must be called on the same thread as ovrHmd_BeginFrameTiming.
-func (hmd *Hmd) GetEyeTimewarpMatrices(hmd.hmd(), ovrEyeType eye, ovrPosef renderPose, ovrMatrix4f twmOut[2]);
+func (hmd *Hmd) GetEyeTimewarpMatrices(hmd.cptr(), ovrEyeType eye, ovrPosef renderPose, ovrMatrix4f twmOut[2]);
 OVR_EXPORT void     ovrHmd_GetEyeTimewarpMatrices(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrMatrix4f twmOut[2]);
 
 //-------------------------------------------------------------------------------------
@@ -619,7 +453,7 @@ OVR_EXPORT void     ovrHmd_GetEyeTimewarpMatrices(ovrHmd hmd, ovrEyeType eye, ov
 // Used to generate projection from ovrEyeDesc::Fov.
 func (hmd *Hmd) ix4f_Projection(ovrFovPort fov, float znear, float zfar, ovrBool rightHanded );
 OVR_EXPORT ovrMatrix4f ovrMatrix4f_Projection( ovrFovPort fov, float znear, float zfar, ovrBool rightHanded );
-                                               
+
 // Used for 2D rendering, Y is down
 // orthoScale = 1.0f / pixelsPerTanAngleAtCenter
 // orthoDistance = distance from camera, such as 0.8m
@@ -643,17 +477,17 @@ func WaitTillTime(absTime float64) float64 {
 // be used to clear the screen.
 func (hmd *Hmd) Hmd_ProcessLatencyTest(r,g,b byte) bool {
 	rgbColorOut := [3]C.uchar{r,g,b}
-	return 0 != C.ovrHmd_ProcessLatencyTest(hmd.hmd(), &rgbColorOut)
+	return 0 != C.ovrHmd_ProcessLatencyTest(hmd.cptr(), &rgbColorOut)
 }
 
 // Returns non-null string once with latency test result, when it is available.
 // Buffer is valid until next call.
 func (hmd *Hmd)  GetLatencyTestResult() string {
-	return C.GoString(C.ovrHmd_GetLatencyTestResult(hmd.hmd()))
+	return C.GoString(C.ovrHmd_GetLatencyTestResult(hmd.cptr()))
 }
 
 func (hmd *Hmd) GetMeasuredLatencyTest2() float64 {
-	return float64(C.ovrHmd_GetMeasuredLatencyTest2(hmd.hmd()))
+	return float64(C.ovrHmd_GetMeasuredLatencyTest2(hmd.cptr()))
 }
 
 const (
@@ -667,25 +501,25 @@ const (
 	KeyNeckToEyeVertical = "NeckEyeVert"
 	DefaultGender = "Male"
 
-	DefaultPlayerHeight = C.OVR_DEFAULT_PLAYER_HEIGHT           
-    DefaultEyeHeight = C.OVR_DEFAULT_EYE_HEIGHT              
-    DefaultIPD = C.OVR_DEFAULT_IPD                     
-    DefaultNeckToEyeHorizental = C.OVR_DEFAULT_NECK_TO_EYE_HORIZONTAL 
-    DefaultNeckToEyeVertical = C.OVR_DEFAULT_NECK_TO_EYE_VERTICAL   
+	DefaultPlayerHeight = C.OVR_DEFAULT_PLAYER_HEIGHT
+    DefaultEyeHeight = C.OVR_DEFAULT_EYE_HEIGHT
+    DefaultIPD = C.OVR_DEFAULT_IPD
+    DefaultNeckToEyeHorizental = C.OVR_DEFAULT_NECK_TO_EYE_HORIZONTAL
+    DefaultNeckToEyeVertical = C.OVR_DEFAULT_NECK_TO_EYE_VERTICAL
 )
 
 
 func (hmd *Hmd) GetFloat(propertyName string, defaultVal float32) float32 {
 	_propertyName := C.CString(propertyName)
 	defer C.Free(unsafe.Pointer(_propertyName))
-	return float32(C.ovrHmd_GetFloat(hmd.hmd(), _propertyName, float32(defaultVal)))
+	return float32(C.ovrHmd_GetFloat(hmd.cptr(), _propertyName, float32(defaultVal)))
 }
 
 
 func (hmd *Hmd) SetFloat(propertyName string, value float32) bool {
 	_propertyName := C.CString(propertyName)
 	defer C.Free(unsafe.Pointer(_propertyName))
-	return bool(C.ovrHmd_SetFloat(hmd.hmd(), _propertyName, float32(value)))
+	return bool(C.ovrHmd_SetFloat(hmd.cptr(), _propertyName, float32(value)))
 }
 
 // Get float[] property. Returns the number of elements filled in, 0 if property doesn't exist.
@@ -693,10 +527,10 @@ func (hmd *Hmd) SetFloat(propertyName string, value float32) bool {
 func (hmd *Hmd) GetFloatArray(propertyName string) []float32 {
 	_propertyName := C.CString(propertyName)
 	defer C.Free(unsafe.Pointer(_propertyName))
-	arraySize := C.ovrHmd_GetArraySize(hmd.hmd(), _propertyName)
+	arraySize := C.ovrHmd_GetArraySize(hmd.cptr(), _propertyName)
 	values := make([]float32, arraySize)
 	arrayPtr := (*C.float)(&values[0])
-	return float32(C.ovrHmd_GetFloatArray(hmd.hmd(), _propertyName, float32(defaultVal)))
+	return float32(C.ovrHmd_GetFloatArray(hmd.cptr(), _propertyName, float32(defaultVal)))
 	C.ovrHmd_GetFloatArray
 	return values
 }
@@ -706,11 +540,14 @@ func (hmd *Hmd) SetFloatArray(propertyName string, values []float32) bool {
 	_values := (*C.float)(&values[0])
 	_propertyName := C.CString(propertyName)
 	defer C.Free(unsafe.Pointer(_propertyName))
-	return bool(ovrHmd_SetFloatArray(hmd.hmd(), _propertyName, values, arraySize))
+	return bool(ovrHmd_SetFloatArray(hmd.cptr(), _propertyName, values, arraySize))
 }
 
 func (hmd *Hmd) GetString(propertyName string) string {
 	_propertyName := C.CString(propertyName)
 	defer C.Free(unsafe.Pointer(_propertyName))
-	return C.GoString(C.ovrHmd_GetString(hmd.hmd(),_propertyName))
+	return C.GoString(C.ovrHmd_GetString(hmd.cptr(),_propertyName))
 }
+
+
+// */
