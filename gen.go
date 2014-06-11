@@ -81,15 +81,16 @@ type FrameTiming struct {
 	EyeScanoutSeconds      [2]float64
 }
 type EyeRenderDesc struct {
-	Eye                       uint32
+	Eye                       EyeType
 	Fov                       FovPort
 	DistortedViewport         Recti
 	PixelsPerTanAngleAtCenter Vector2f
 	ViewAdjust                Vector3f
 }
+
 type RenderApiType uint32
 type RenderApiConfigHeader struct {
-	API         uint32
+	API         RenderApiType
 	RTSize      Sizei
 	Multisample int32
 }
@@ -98,7 +99,7 @@ type RenderApiConfig struct {
 	PlatformData [8]uint64
 }
 type TextureHeader struct {
-	API            uint32
+	API            RenderApiType
 	TextureSize    Sizei
 	RenderViewport Recti
 }

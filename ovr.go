@@ -2,6 +2,7 @@ package ovr
 
 //#cgo LDFLAGS: -lovr -ludev -lGL -lX11 -lm -lstdc++ -lXrandr -LLib/Linux/Release/x86_64/
 //#include "OVR_CAPI.h"
+//#include "stdlib.h"
 import "C"
 
 import "unsafe"
@@ -25,6 +26,12 @@ func vector2i(that C.ovrVector2i) (this Vector2i) {
 	return
 }
 
+func c_vector2i(that Vector2i) (this C.ovrVector2i) {
+	this.x = C.int(that.X)
+	this.y = C.int(that.Y)
+	return
+}
+
 func quatf(that C.ovrQuatf) (this Quatf) {
 	this.X = float32(that.x)
 	this.Y = float32(that.y)
@@ -33,11 +40,37 @@ func quatf(that C.ovrQuatf) (this Quatf) {
 	return
 }
 
+func matrix4f(that C.ovrMatrix4f) (this Matrix4f) {
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			this.M[i][j] = float32(that.M[i][j])
+		}
+	}
+}
+
+func recti(that C.ovrRecti) (this Recti) {
+	this.Pos = vector2i(that.Pos)
+	this.Size = sizei(that.Size)
+}
+
+func c_recti(that Recti) (this C.ovrRecti) {
+	this.Pos = c_vector2i(that.Pos)
+	this.Size = c_sizei(that.Size)
+}
+
 func fovPort(that C.ovrFovPort) (this FovPort) {
 	this.DownTan = float32(that.DownTan)
 	this.LeftTan = float32(that.LeftTan)
 	this.RightTan = float32(that.RightTan)
 	this.UpTan = float32(that.UpTan)
+	return
+}
+
+func c_fovPort(that FovPort) (this C.ovrFovPort) {
+	this.DownTan = C.float(that.DownTan)
+	this.LeftTan = C.float(that.LeftTan)
+	this.RightTan = C.float(that.RightTan)
+	this.UpTan = C.float(that.UpTan)
 	return
 }
 
@@ -69,6 +102,61 @@ func sizei(that C.ovrSizei) (this Sizei) {
 	this.W = int32(that.w)
 	this.H = int32(that.h)
 	return
+}
+
+func c_sizei(that Sizei) (this C.ovrSizei) {
+	this.w = C.int(that.W)
+	this.h = C.int(that.H)
+	return
+}
+
+func renderApiConfigHeader(that C.ovrRenderAPIConfigHeader) (this RenderApiConfigHeader) {
+	this.API = RenderApiType(that.API)
+	this.RTSize = sizei(that.RTSize)
+	this.Multisample = int32(that.Multisample)
+	return
+}
+
+func c_renderApiConfigHeader(that RenderApiConfigHeader) (this C.ovrRenderAPIConfigHeader) {
+	this.API = C.ovrRenderAPIType(that.API)
+	this.RTSize = c_sizei(that.RTSize)
+	this.Multisample = C.int(that.Multisample)
+	return
+}
+
+func renderApiConfig(that C.ovrRenderAPIConfig) (this RenderApiConfig) {
+	this.Header = renderApiConfigHeader(that.Header)
+	for i := 0; i < len(this.PlatformData); i++ {
+		this.PlatformData[i] = uint64(that.PlatformData[i])
+	}
+	return
+}
+
+func c_renderApiConfig(that RenderApiConfig) (this C.ovrRenderAPIConfig) {
+	this.Header = c_renderApiConfigHeader(that.Header)
+	for i := 0; i < len(that.PlatformData); i++ {
+		this.PlatformData[i] = C.uintptr_t(that.PlatformData[i])
+	}
+	return
+}
+
+func frameTiming(that C.ovrFrameTiming) (this FrameTiming) {
+	this.DeltaSeconds = float32(that.DeltaSeconds)
+	this.ThisFrameSeconds = float64(that.ThisFrameSeconds)
+	this.TimewarpPointSeconds = float64(that.TimewarpPointSeconds)
+	this.NextFrameSeconds = float64(that.NextFrameSeconds)
+	this.ScanoutMidpointSeconds = float64(that.ScanoutMidpointSeconds)
+	this.EyeScanoutSeconds[0] = float64(that.EyeScanoutSeconds[0])
+	this.EyeScanoutSeconds[1] = float64(that.EyeScanoutSeconds[1])
+	return
+}
+
+func eyeRenderDesc(that C.ovrEyeRenderDesc) (this EyeRenderDesc) {
+	this.Eye = EyeType(that.Eye)
+	this.Fov = fovPort(that.Fov)
+	this.DistortedViewport = recti(that.DistortedViewport)
+	this.PixelsPerTanAngleAtCenter = vector2f(that.PixelsPerTanAngleAtCenter)
+	this.ViewAdjust = vector3f(that.ViewAdjust)
 }
 
 func (this *SensorState) cptr() *C.ovrSensorState {
@@ -282,34 +370,34 @@ func (hmd *Hmd) GetFovTextureSize(eye EyeType, fov FovPort, pixelsPerDisplayPixe
 //  - distortionCaps describe distortion settings that will be applied.
 //
 
-/*
-OVR_EXPORT ovrBool ovrHmd_ConfigureRendering( ovrHmd hmd,
-											const ovrRenderAPIConfig* apiConfig,
-                                            unsigned int distortionCaps,
-                                            const ovrFovPort eyeFovIn[2],
-                                            ovrEyeRenderDesc eyeRenderDescOut[2] );
-
-OVR_EXPORT ovrBool ovrHmd_ConfigureRendering( ovrHmd hmd,
-                                            const ovrRenderAPIConfig* apiConfig,
-                                            unsigned int distortionCaps,
-                                            const ovrFovPort eyeFovIn[2],
-                                            ovrEyeRenderDesc eyeRenderDescOut[2] );
-
+func (this *Hmd) ConfigureRendering(apiConfig *RenderApiConfig, distortionCaps DistortionCaps, eyeFovIn [2]FovPort) (eyeRenderDescOut [2]EyeRenderDesc, ok bool) {
+	//config := c_renderApiConfig(apiConfig)
+	dc := C.uint(distortionCaps)
+	efi := [2]C.ovrFovPort{
+		c_fovPort(eyeFovIn[0]),
+		c_fovPort(eyeFovIn[1]),
+	}
+	ok = 0 != C.ovrHmd_ConfigureRendering(this.cptr(), apiConfig.cptr(), dc, &efi[0], eyeRenderDescOut[0].cptr())
+	return
+}
 
 // Begins a frame, returning timing and orientation information useful for simulation.
 // This should be called in the beginning of game rendering loop (on render thread).
 // This function relies on ovrHmd_BeginFrameTiming for some of its functionality.
 // Pass 0 for frame index if not using GetFrameTiming.
-OVR_EXPORT ovrFrameTiming ovrHmd_BeginFrame(ovrHmd hmd, unsigned int frameIndex);
-OVR_EXPORT ovrFrameTiming ovrHmd_BeginFrame(ovrHmd hmd, unsigned int frameIndex);
+
+func (this *Hmd) BeginFrame(frameIndex uint) FrameTiming {
+	return frameTiming(C.ovrHmd_BeginFrame(this.cptr(), C.uint(frameIndex)))
+}
 
 // Ends frame, rendering textures to frame buffer. This may perform distortion and scaling
 // internally, assuming is it not delegated to another thread.
 // Must be called on the same thread as BeginFrame. Calls ovrHmd_BeginEndTiming internally.
 // *** This Function will to Present/SwapBuffers and potentially wait for GPU Sync ***.
-OVR_EXPORT void     ovrHmd_EndFrame(ovrHmd hmd);
-OVR_EXPORT void     ovrHmd_EndFrame(ovrHmd hmd);
 
+func (this *Hmd) EndFrame() {
+	C.ovrHmd_EndFrame(this.cptr())
+}
 
 // Marks beginning of eye rendering. Must be called on the same thread as BeginFrame.
 // This function uses ovrHmd_GetEyePose to predict sensor state that should be
@@ -318,8 +406,10 @@ OVR_EXPORT void     ovrHmd_EndFrame(ovrHmd hmd);
 // It is ok to call ovrHmd_BeginEyeRender() on both eyes before calling ovrHmd_EndEyeRender.
 // If rendering one eye at a time, it is best to render eye specified by
 // HmdDesc.EyeRenderOrder[0] first.
-OVR_EXPORT ovrPosef ovrHmd_BeginEyeRender(ovrHmd hmd, ovrEyeType eye);
-OVR_EXPORT ovrPosef ovrHmd_BeginEyeRender(ovrHmd hmd, ovrEyeType eye);
+
+func (this *Hmd) BeginEyeRender(eye EyeType) Posef {
+	return posef(C.ovrHmd_BeginEyeRender(this.cptr(), C.ovrEyeType(eye)))
+}
 
 // Marks the end of eye rendering and submits the eye texture for display after it is ready.
 // Rendering viewport within the texture can change per frame if necessary.
@@ -327,8 +417,10 @@ OVR_EXPORT ovrPosef ovrHmd_BeginEyeRender(ovrHmd hmd, ovrEyeType eye);
 // on the implementation. The API performs distortion and scaling internally.
 // 'renderPose' will typically be the value returned from ovrHmd_BeginEyeRender, but can
 // be different if a different pose was used for rendering.
-OVR_EXPORT void     ovrHmd_EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrTexture* eyeTexture);
-OVR_EXPORT void     ovrHmd_EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrTexture* eyeTexture);
+
+func (this *Hmd) EndEyeRender(eye EyeType, renderPose Posef, eyeTexture Texture) {
+	C.ovrHmd_EndEyeRender(this.cptr(), C.ovrEyeType(eye), c_posef(renderPose), eyeTexture.cptr())
+}
 
 //-------------------------------------------------------------------------------------
 // *****  Game-Side Rendering Functions
@@ -352,10 +444,14 @@ OVR_EXPORT void     ovrHmd_EndEyeRender(ovrHmd hmd, ovrEyeType eye, ovrPosef ren
 // Computes distortion viewport, view adjust and other rendering for the specified
 // eye. This can be used instead of ovrHmd_ConfigureRendering to help setup rendering on
 // the game side.
-OVR_EXPORT ovrEyeRenderDesc ovrHmd_GetRenderDesc(ovrHmd hmd, ovrEyeType eyeType, ovrFovPort fov);
-OVR_EXPORT ovrEyeRenderDesc ovrHmd_GetRenderDesc(ovrHmd hmd, ovrEyeType eyeType, ovrFovPort fov);
 
+func (this *Hmd) GetRenderDesc(eyeType EyeType, fov ovrFovPort) EyeRenderDesc {
+	return eyeRenderDesc(C.ovrHmd_GetRenderDesc(this.cptr(), C.ovrEyeType(eyeType), c_fovPort(fov)))
+}
 
+/*
+
+TODO add support for Distortion Vertex
 // Describes a vertex used for distortion; this is intended to be converted into
 // the engine-specific format.
 // Some fields may be unused based on ovrDistortionCaps selected. TexG and TexB, for example,
@@ -397,46 +493,52 @@ OVR_EXPORT ovrBool  ovrHmd_CreateDistortionMesh( ovrHmd hmd,
                                                  unsigned int distortionCaps,
                                                  ovrDistortionMesh *meshData );
 
+
+
 // Frees distortion mesh allocated by ovrHmd_GenerateDistortionMesh. meshData elements
 // are set to null and zeroes after the call.
 func (hmd *Hmd) DestroyDistortionMesh(ovrDistortionMesh* meshData );
 OVR_EXPORT void     ovrHmd_DestroyDistortionMesh( ovrDistortionMesh* meshData );
 
+*/
+
 // Computes updated 'uvScaleOffsetOut' to be used with a distortion if render target size or
 // viewport changes after the fact. This can be used to adjust render size every frame, if desired.
-func (hmd *Hmd) GetRenderScaleAndOffset(ovrFovPort fov, ovrSizei textureSize, ovrRecti renderViewport, ovrVector2f uvScaleOffsetOut[2] );
-OVR_EXPORT void     ovrHmd_GetRenderScaleAndOffset( ovrFovPort fov, ovrSizei textureSize, ovrRecti renderViewport, ovrVector2f uvScaleOffsetOut[2] );
-
+func (hmd *Hmd) GetRenderScaleAndOffset(fov FovPort, textureSize Sizei, renderViewport Recti) (uvScaleOffsetOut [2]Vector2f) {
+	C.ovrHmd_GetRenderScaleAndOffset(c_fovPort(fov), c_sizei(textureSize), c_recti(renderViewport), uvScaleOffsetOut[0].cptr())
+}
 
 // Thread-safe timing function for the main thread. Caller should increment frameIndex
 // with every frame and pass the index to RenderThread for processing.
-func (hmd *Hmd) GetFrameTiming(hmd.cptr(), frameIndex uint);
-OVR_EXPORT ovrFrameTiming ovrHmd_GetFrameTiming(ovrHmd hmd, unsigned int frameIndex);
+func (this *Hmd) GetFrameTiming(frameIndex uint) FrameTiming {
+	return frameTiming(C.ovrHmd_GetFrameTiming(this.cptr(), C.uint(frameIndex)))
+}
 
 // Called at the beginning of the frame on the Render Thread.
 // Pass frameIndex == 0 if ovrHmd_GetFrameTiming isn't being used. Otherwise,
 // pass the same frame index as was used for GetFrameTiming on the main thread.
-func (hmd *Hmd) BeginFrameTiming(hmd.cptr(), frameIndex uint);
-OVR_EXPORT ovrFrameTiming ovrHmd_BeginFrameTiming(ovrHmd hmd, unsigned int frameIndex);
+func (hmd *Hmd) BeginFrameTiming(frameIndex uint) FrameTiming {
+	return frameTiming(C.ovrHmd_BeginFrameTiming(hmd.cptr(), C.uint(frameIndex)))
+}
 
 // Marks the end of game-rendered frame, tracking the necessary timing information. This
 // function must be called immediately after Present/SwapBuffers + GPU sync. GPU sync is important
 // before this call to reduce latency and ensure proper timing.
 func (hmd *Hmd) EndFrameTiming() {
-	C.ovrHmd_EndFrameTiming(hmd.cptr());
+	C.ovrHmd_EndFrameTiming(hmd.cptr())
 }
 
 // Initializes and resets frame time tracking. This is typically not necessary, but
 // is helpful if game changes vsync state or video mode. vsync is assumed to be on if this
 // isn't called. Resets internal frame index to the specified number.
 func (hmd *Hmd) ResetFrameTiming(frameIndex uint) {
-	C.ResetFrameTiming(hmd.cptr(), C.uint(frameIndex))
+	C.ovrHmd_ResetFrameTiming(hmd.cptr(), C.uint(frameIndex))
 }
 
 // Predicts and returns Pose that should be used rendering the specified eye.
 // Must be called between ovrHmd_BeginFrameTiming & ovrHmd_EndFrameTiming.
-func (hmd *Hmd) GetEyePose(ovrEyeType eye){
-	OVR_EXPORT ovrPosef ovrHmd_GetEyePose(ovrHmd hmd, ovrEyeType eye);
+func (this *Hmd) GetEyePose(eye EyeType) Posef {
+	return posef(C.ovrHmd_GetEyePose(this.cptr(), C.ovrEyeType(eye)))
 }
 
 // Computes timewarp matrices used by distortion mesh shader, these are used to adjust
@@ -444,25 +546,32 @@ func (hmd *Hmd) GetEyePose(ovrEyeType eye){
 // The ovrDistortionVertex::TimeWarpFactor is used to blend between the matrices,
 // usually representing two different sides of the screen.
 // Must be called on the same thread as ovrHmd_BeginFrameTiming.
-func (hmd *Hmd) GetEyeTimewarpMatrices(hmd.cptr(), ovrEyeType eye, ovrPosef renderPose, ovrMatrix4f twmOut[2]);
-OVR_EXPORT void     ovrHmd_GetEyeTimewarpMatrices(ovrHmd hmd, ovrEyeType eye, ovrPosef renderPose, ovrMatrix4f twmOut[2]);
+func (hmd *Hmd) GetEyeTimewarpMatrices(eye EyeType, renderPose Posef) (twmOut [2]Matrix4f) {
+	C.ovrHmd_GetEyeTimewarpMatrices(hmd.cptr(), C.ovrEyeType(eye), c_posef(renderPose), twmOut[0].cptr())
+}
 
 //-------------------------------------------------------------------------------------
 // ***** Stateless math setup functions
 
 // Used to generate projection from ovrEyeDesc::Fov.
-func (hmd *Hmd) ix4f_Projection(ovrFovPort fov, float znear, float zfar, ovrBool rightHanded );
-OVR_EXPORT ovrMatrix4f ovrMatrix4f_Projection( ovrFovPort fov, float znear, float zfar, ovrBool rightHanded );
+func MatrixProjection(fov FovPort, znear, zfar float32, rightHanded bool) Matrix4f {
+	if rightHanded {
+		return matrix4f(C.ovrMatrix4f_Projection(c_fovPort(fov), C.float(znear), C.float(zfar), 1))
+	} else {
+		return matrix4f(C.ovrMatrix4f_Projection(c_fovPort(fov), C.float(znear), C.float(zfar), 0))
+	}
+}
 
 // Used for 2D rendering, Y is down
 // orthoScale = 1.0f / pixelsPerTanAngleAtCenter
 // orthoDistance = distance from camera, such as 0.8m
-func (hmd *Hmd) ix4f_OrthoSubProjection(ovrMatrix4f projection, ovrVector2f orthoScale, float orthoDistance, float eyeViewAdjustX);
-OVR_EXPORT ovrMatrix4f ovrMatrix4f_OrthoSubProjection(ovrMatrix4f projection, ovrVector2f orthoScale, float orthoDistance, float eyeViewAdjustX);
+func MatrixOrthoSubProjection(projection Matrix4f, orthoScale Vector2f, orthoDistance, eyeViewAdjustX float32) Matrix4f {
+	return matrix4f(C.ovrMatrix4f_OrthoSubProjection(c_matrix4f(projection), c_vector2f(orthoScale), C.float(orthoDistance), C.float(eyeViewAdjustX)))
+}
 
 // Returns global, absolute high-resolution time in seconds. This is the same
 // value as used in sensor messages.
-func WaitTimeInSeconds() float64 {
+func GetTimeInSeconds() float64 {
 	return float64(C.ovr_GetTimeInSeconds())
 }
 
@@ -470,19 +579,20 @@ func WaitTimeInSeconds() float64 {
 func WaitTillTime(absTime float64) float64 {
 	return float64(C.ovr_WaitTillTime(C.double(absTime)))
 }
+
 // -----------------------------------------------------------------------------------
 // ***** Latency Test interface
 
 // Does latency test processing and returns 'TRUE' if specified rgb color should
 // be used to clear the screen.
-func (hmd *Hmd) Hmd_ProcessLatencyTest(r,g,b byte) bool {
-	rgbColorOut := [3]C.uchar{r,g,b}
+func (hmd *Hmd) Hmd_ProcessLatencyTest(r, g, b byte) bool {
+	rgbColorOut := [3]C.uchar{r, g, b}
 	return 0 != C.ovrHmd_ProcessLatencyTest(hmd.cptr(), &rgbColorOut)
 }
 
 // Returns non-null string once with latency test result, when it is available.
 // Buffer is valid until next call.
-func (hmd *Hmd)  GetLatencyTestResult() string {
+func (hmd *Hmd) GetLatencyTestResult() string {
 	return C.GoString(C.ovrHmd_GetLatencyTestResult(hmd.cptr()))
 }
 
@@ -491,34 +601,31 @@ func (hmd *Hmd) GetMeasuredLatencyTest2() float64 {
 }
 
 const (
-	KeyUser = "User"
-	KeyName = "Name"
-	KeyGender = "Gender"
-	KeyPlayerHeight = "PlayerHeight"
-	KeyEyeHeight = "EyeHeight"
-	KeyIPD = "IPD"
-	KeyNeckToEyeHorizontal = "NeckEyeHori"
-	KeyNeckToEyeVertical = "NeckEyeVert"
-	DefaultGender = "Male"
-
-	DefaultPlayerHeight = C.OVR_DEFAULT_PLAYER_HEIGHT
-    DefaultEyeHeight = C.OVR_DEFAULT_EYE_HEIGHT
-    DefaultIPD = C.OVR_DEFAULT_IPD
-    DefaultNeckToEyeHorizental = C.OVR_DEFAULT_NECK_TO_EYE_HORIZONTAL
-    DefaultNeckToEyeVertical = C.OVR_DEFAULT_NECK_TO_EYE_VERTICAL
+	KeyUser                    = "User"
+	KeyName                    = "Name"
+	KeyGender                  = "Gender"
+	KeyPlayerHeight            = "PlayerHeight"
+	KeyEyeHeight               = "EyeHeight"
+	KeyIPD                     = "IPD"
+	KeyNeckToEyeHorizontal     = "NeckEyeHori"
+	KeyNeckToEyeVertical       = "NeckEyeVert"
+	DefaultGender              = "Male"
+	DefaultPlayerHeight        = C.OVR_DEFAULT_PLAYER_HEIGHT
+	DefaultEyeHeight           = C.OVR_DEFAULT_EYE_HEIGHT
+	DefaultIPD                 = C.OVR_DEFAULT_IPD
+	DefaultNeckToEyeHorizental = C.OVR_DEFAULT_NECK_TO_EYE_HORIZONTAL
+	DefaultNeckToEyeVertical   = C.OVR_DEFAULT_NECK_TO_EYE_VERTICAL
 )
-
 
 func (hmd *Hmd) GetFloat(propertyName string, defaultVal float32) float32 {
 	_propertyName := C.CString(propertyName)
-	defer C.Free(unsafe.Pointer(_propertyName))
+	defer C.free(unsafe.Pointer(_propertyName))
 	return float32(C.ovrHmd_GetFloat(hmd.cptr(), _propertyName, float32(defaultVal)))
 }
 
-
 func (hmd *Hmd) SetFloat(propertyName string, value float32) bool {
 	_propertyName := C.CString(propertyName)
-	defer C.Free(unsafe.Pointer(_propertyName))
+	defer C.free(unsafe.Pointer(_propertyName))
 	return bool(C.ovrHmd_SetFloat(hmd.cptr(), _propertyName, float32(value)))
 }
 
@@ -526,7 +633,7 @@ func (hmd *Hmd) SetFloat(propertyName string, value float32) bool {
 // Maximum of arraySize elements will be written.
 func (hmd *Hmd) GetFloatArray(propertyName string) []float32 {
 	_propertyName := C.CString(propertyName)
-	defer C.Free(unsafe.Pointer(_propertyName))
+	defer C.free(unsafe.Pointer(_propertyName))
 	arraySize := C.ovrHmd_GetArraySize(hmd.cptr(), _propertyName)
 	values := make([]float32, arraySize)
 	arrayPtr := (*C.float)(&values[0])
@@ -539,15 +646,14 @@ func (hmd *Hmd) SetFloatArray(propertyName string, values []float32) bool {
 	arraySize := C.uint(len(values))
 	_values := (*C.float)(&values[0])
 	_propertyName := C.CString(propertyName)
-	defer C.Free(unsafe.Pointer(_propertyName))
+	defer C.free(unsafe.Pointer(_propertyName))
 	return bool(ovrHmd_SetFloatArray(hmd.cptr(), _propertyName, values, arraySize))
 }
 
 func (hmd *Hmd) GetString(propertyName string) string {
 	_propertyName := C.CString(propertyName)
-	defer C.Free(unsafe.Pointer(_propertyName))
-	return C.GoString(C.ovrHmd_GetString(hmd.cptr(),_propertyName))
+	defer C.free(unsafe.Pointer(_propertyName))
+	return C.GoString(C.ovrHmd_GetString(hmd.cptr(), _propertyName))
 }
 
-
-// */
+//
