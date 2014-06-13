@@ -13,10 +13,23 @@ func vector2f(that C.ovrVector2f) (this Vector2f) {
 	return
 }
 
+func c_vector2f(that Vector2f) (this C.ovrVector2f) {
+	this.x = C.float(that.X)
+	this.y = C.float(that.Y)
+	return
+}
+
 func vector3f(that C.ovrVector3f) (this Vector3f) {
 	this.X = float32(that.x)
 	this.Y = float32(that.y)
 	this.Z = float32(that.z)
+	return
+}
+
+func c_vector3f(that Vector3f) (this C.ovrVector3f) {
+	this.x = C.float(that.X)
+	this.y = C.float(that.Y)
+	this.z = C.float(that.Z)
 	return
 }
 
@@ -40,22 +53,42 @@ func quatf(that C.ovrQuatf) (this Quatf) {
 	return
 }
 
+func c_quatf(that Quatf) (this C.ovrQuatf) {
+	this.x = C.float(that.X)
+	this.y = C.float(that.Y)
+	this.z = C.float(that.Z)
+	this.w = C.float(that.W)
+	return
+}
+
 func matrix4f(that C.ovrMatrix4f) (this Matrix4f) {
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
 			this.M[i][j] = float32(that.M[i][j])
 		}
 	}
+	return
+}
+
+func c_matrix4f(that Matrix4f) (this C.ovrMatrix4f) {
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 4; j++ {
+			this.M[i][j] = C.float(that.M[i][j])
+		}
+	}
+	return
 }
 
 func recti(that C.ovrRecti) (this Recti) {
 	this.Pos = vector2i(that.Pos)
 	this.Size = sizei(that.Size)
+	return
 }
 
 func c_recti(that Recti) (this C.ovrRecti) {
 	this.Pos = c_vector2i(that.Pos)
 	this.Size = c_sizei(that.Size)
+	return
 }
 
 func fovPort(that C.ovrFovPort) (this FovPort) {
@@ -95,6 +128,12 @@ func poseState(that C.ovrPoseStatef) (this PoseStatef) {
 func posef(that C.ovrPosef) (this Posef) {
 	this.Orientation = quatf(that.Orientation)
 	this.Position = vector3f(that.Position)
+	return
+}
+
+func c_posef(that Posef) (this C.ovrPosef) {
+	this.Orientation = c_quatf(that.Orientation)
+	this.Position = c_vector3f(that.Position)
 	return
 }
 
@@ -157,6 +196,15 @@ func eyeRenderDesc(that C.ovrEyeRenderDesc) (this EyeRenderDesc) {
 	this.DistortedViewport = recti(that.DistortedViewport)
 	this.PixelsPerTanAngleAtCenter = vector2f(that.PixelsPerTanAngleAtCenter)
 	this.ViewAdjust = vector3f(that.ViewAdjust)
+	return
+}
+
+func (this *Matrix4f) cptr() *C.ovrMatrix4f {
+	return (*C.ovrMatrix4f)(unsafe.Pointer(this))
+}
+
+func (this *Vector2f) cptr() *C.ovrVector2f {
+	return (*C.ovrVector2f)(unsafe.Pointer(this))
 }
 
 func (this *SensorState) cptr() *C.ovrSensorState {
@@ -445,7 +493,7 @@ func (this *Hmd) EndEyeRender(eye EyeType, renderPose Posef, eyeTexture Texture)
 // eye. This can be used instead of ovrHmd_ConfigureRendering to help setup rendering on
 // the game side.
 
-func (this *Hmd) GetRenderDesc(eyeType EyeType, fov ovrFovPort) EyeRenderDesc {
+func (this *Hmd) GetRenderDesc(eyeType EyeType, fov FovPort) EyeRenderDesc {
 	return eyeRenderDesc(C.ovrHmd_GetRenderDesc(this.cptr(), C.ovrEyeType(eyeType), c_fovPort(fov)))
 }
 
@@ -506,6 +554,7 @@ OVR_EXPORT void     ovrHmd_DestroyDistortionMesh( ovrDistortionMesh* meshData );
 // viewport changes after the fact. This can be used to adjust render size every frame, if desired.
 func (hmd *Hmd) GetRenderScaleAndOffset(fov FovPort, textureSize Sizei, renderViewport Recti) (uvScaleOffsetOut [2]Vector2f) {
 	C.ovrHmd_GetRenderScaleAndOffset(c_fovPort(fov), c_sizei(textureSize), c_recti(renderViewport), uvScaleOffsetOut[0].cptr())
+	return
 }
 
 // Thread-safe timing function for the main thread. Caller should increment frameIndex
@@ -548,6 +597,7 @@ func (this *Hmd) GetEyePose(eye EyeType) Posef {
 // Must be called on the same thread as ovrHmd_BeginFrameTiming.
 func (hmd *Hmd) GetEyeTimewarpMatrices(eye EyeType, renderPose Posef) (twmOut [2]Matrix4f) {
 	C.ovrHmd_GetEyeTimewarpMatrices(hmd.cptr(), C.ovrEyeType(eye), c_posef(renderPose), twmOut[0].cptr())
+	return
 }
 
 //-------------------------------------------------------------------------------------
@@ -585,10 +635,12 @@ func WaitTillTime(absTime float64) float64 {
 
 // Does latency test processing and returns 'TRUE' if specified rgb color should
 // be used to clear the screen.
+/*
 func (hmd *Hmd) Hmd_ProcessLatencyTest(r, g, b byte) bool {
 	rgbColorOut := [3]C.uchar{r, g, b}
 	return 0 != C.ovrHmd_ProcessLatencyTest(hmd.cptr(), &rgbColorOut)
 }
+*/
 
 // Returns non-null string once with latency test result, when it is available.
 // Buffer is valid until next call.
@@ -610,23 +662,23 @@ const (
 	KeyNeckToEyeHorizontal     = "NeckEyeHori"
 	KeyNeckToEyeVertical       = "NeckEyeVert"
 	DefaultGender              = "Male"
-	DefaultPlayerHeight        = C.OVR_DEFAULT_PLAYER_HEIGHT
-	DefaultEyeHeight           = C.OVR_DEFAULT_EYE_HEIGHT
-	DefaultIPD                 = C.OVR_DEFAULT_IPD
-	DefaultNeckToEyeHorizental = C.OVR_DEFAULT_NECK_TO_EYE_HORIZONTAL
-	DefaultNeckToEyeVertical   = C.OVR_DEFAULT_NECK_TO_EYE_VERTICAL
+	DefaultPlayerHeight        = 1.778
+	DefaultEyeHeight           = 1.675
+	DefaultIPD                 = 0.064
+	DefaultNeckToEyeHorizental = 0.12
+	DefaultNeckToEyeVertical   = 0.12
 )
 
 func (hmd *Hmd) GetFloat(propertyName string, defaultVal float32) float32 {
 	_propertyName := C.CString(propertyName)
 	defer C.free(unsafe.Pointer(_propertyName))
-	return float32(C.ovrHmd_GetFloat(hmd.cptr(), _propertyName, float32(defaultVal)))
+	return float32(C.ovrHmd_GetFloat(hmd.cptr(), _propertyName, C.float(defaultVal)))
 }
 
 func (hmd *Hmd) SetFloat(propertyName string, value float32) bool {
 	_propertyName := C.CString(propertyName)
 	defer C.free(unsafe.Pointer(_propertyName))
-	return bool(C.ovrHmd_SetFloat(hmd.cptr(), _propertyName, float32(value)))
+	return 0 != C.ovrHmd_SetFloat(hmd.cptr(), _propertyName, C.float(value))
 }
 
 // Get float[] property. Returns the number of elements filled in, 0 if property doesn't exist.
@@ -637,8 +689,7 @@ func (hmd *Hmd) GetFloatArray(propertyName string) []float32 {
 	arraySize := C.ovrHmd_GetArraySize(hmd.cptr(), _propertyName)
 	values := make([]float32, arraySize)
 	arrayPtr := (*C.float)(&values[0])
-	return float32(C.ovrHmd_GetFloatArray(hmd.cptr(), _propertyName, float32(defaultVal)))
-	C.ovrHmd_GetFloatArray
+	C.ovrHmd_GetFloatArray(hmd.cptr(), _propertyName, arrayPtr, arraySize)
 	return values
 }
 
@@ -647,13 +698,18 @@ func (hmd *Hmd) SetFloatArray(propertyName string, values []float32) bool {
 	_values := (*C.float)(&values[0])
 	_propertyName := C.CString(propertyName)
 	defer C.free(unsafe.Pointer(_propertyName))
-	return bool(ovrHmd_SetFloatArray(hmd.cptr(), _propertyName, values, arraySize))
+	return 0 != C.ovrHmd_SetFloatArray(hmd.cptr(), _propertyName, _values, arraySize)
 }
 
-func (hmd *Hmd) GetString(propertyName string) string {
+func (hmd *Hmd) GetString(propertyName string, defaultValue string) string {
 	_propertyName := C.CString(propertyName)
 	defer C.free(unsafe.Pointer(_propertyName))
-	return C.GoString(C.ovrHmd_GetString(hmd.cptr(), _propertyName))
+	str := C.ovrHmd_GetString(hmd.cptr(), _propertyName, nil)
+	if str == nil {
+		return defaultValue
+	} else {
+		return C.GoString(str)
+	}
 }
 
 //
