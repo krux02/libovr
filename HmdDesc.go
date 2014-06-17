@@ -74,7 +74,7 @@ func (this *Hmd) cptr() C.ovrHmd {
 	return C.ovrHmd((*C.struct_ovrHmdStruct)(this))
 }
 
-func (this *HmdDesc) Init(that *C.ovrHmdDesc) {
+func hmdDesc(that C.ovrHmdDesc) (this HmdDesc) {
 	this.Handle = hmd(that.Handle)
 	this.Type = HmdType(that.Type)
 	this.ProductName = C.GoString(that.ProductName)
@@ -90,4 +90,5 @@ func (this *HmdDesc) Init(that *C.ovrHmdDesc) {
 	}
 	this.DisplayDeviceName = C.GoString(that.DisplayDeviceName)
 	this.DisplayId = int(that.DisplayId)
+	return this
 }

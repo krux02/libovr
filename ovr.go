@@ -279,7 +279,7 @@ func Shutdown() {
 
 // Detects or re-detects HMDs and reports the total number detected.
 // Users can get information about each HMD by calling ovrHmd_Create with an index.
-func Hmd_Detect() int {
+func HmdDetect() int {
 	return int(C.ovrHmd_Detect())
 }
 
@@ -308,13 +308,13 @@ func (this *Hmd) GetLastError() string {
 // Returns capability bits that are enabled at this time; described by ovrHmdCaps.
 // Note that this value is different font ovrHmdDesc::HmdCaps, which describes what
 // capabilities are available.
-func (this *Hmd) GetEnabledCaps() uint {
-	return uint(C.ovrHmd_GetEnabledCaps(this.cptr()))
+func (this *Hmd) GetEnabledCaps() HmdCaps {
+	return HmdCaps(C.ovrHmd_GetEnabledCaps(this.cptr()))
 }
 
 // Modifies capability bits described by ovrHmdCaps that can be modified,
 // such as ovrHmd_LowPersistance.
-func (this *Hmd) SetEnabledCaps(hmdCaps uint) {
+func (this *Hmd) SetEnabledCaps(hmdCaps HmdCaps) {
 	C.ovrHmd_SetEnabledCaps(this.cptr(), C.uint(hmdCaps))
 }
 
@@ -331,7 +331,7 @@ func (this *Hmd) SetEnabledCaps(hmdCaps uint) {
 //  - requiredSensorCaps specify sensor capabilities required at the time of the call.
 //    If they are not available, the function will fail. Pass 0 if only specifying
 //    supportedSensorCaps.
-func (this *Hmd) StartSensor(supportedSensorCaps, requiredSensorCaps uint) bool {
+func (this *Hmd) StartSensor(supportedSensorCaps, requiredSensorCaps SensorCaps) bool {
 	return 0 != C.ovrHmd_StartSensor(this.cptr(), C.uint(supportedSensorCaps), C.uint(requiredSensorCaps))
 }
 
@@ -364,8 +364,7 @@ func (this *Hmd) GetSensorDesc(descOut *SensorDesc) bool {
 func (this *Hmd) GetDesc() (desc HmdDesc) {
 	var cdesc C.ovrHmdDesc
 	C.ovrHmd_GetDesc(this.cptr(), &cdesc)
-	desc.Init(&cdesc)
-	return
+	return hmdDesc(cdesc)
 }
 
 // Calculates texture size recommended for rendering one eye within HMD, given FOV cone.
@@ -434,7 +433,7 @@ func (this *Hmd) ConfigureRendering(apiConfig *RenderApiConfig, distortionCaps D
 // This function relies on ovrHmd_BeginFrameTiming for some of its functionality.
 // Pass 0 for frame index if not using GetFrameTiming.
 
-func (this *Hmd) BeginFrame(frameIndex uint) FrameTiming {
+func (this *Hmd) BeginFrame(frameIndex int) FrameTiming {
 	return frameTiming(C.ovrHmd_BeginFrame(this.cptr(), C.uint(frameIndex)))
 }
 
@@ -559,14 +558,14 @@ func (hmd *Hmd) GetRenderScaleAndOffset(fov FovPort, textureSize Sizei, renderVi
 
 // Thread-safe timing function for the main thread. Caller should increment frameIndex
 // with every frame and pass the index to RenderThread for processing.
-func (this *Hmd) GetFrameTiming(frameIndex uint) FrameTiming {
+func (this *Hmd) GetFrameTiming(frameIndex int) FrameTiming {
 	return frameTiming(C.ovrHmd_GetFrameTiming(this.cptr(), C.uint(frameIndex)))
 }
 
 // Called at the beginning of the frame on the Render Thread.
 // Pass frameIndex == 0 if ovrHmd_GetFrameTiming isn't being used. Otherwise,
 // pass the same frame index as was used for GetFrameTiming on the main thread.
-func (hmd *Hmd) BeginFrameTiming(frameIndex uint) FrameTiming {
+func (hmd *Hmd) BeginFrameTiming(frameIndex int) FrameTiming {
 	return frameTiming(C.ovrHmd_BeginFrameTiming(hmd.cptr(), C.uint(frameIndex)))
 }
 
@@ -580,7 +579,7 @@ func (hmd *Hmd) EndFrameTiming() {
 // Initializes and resets frame time tracking. This is typically not necessary, but
 // is helpful if game changes vsync state or video mode. vsync is assumed to be on if this
 // isn't called. Resets internal frame index to the specified number.
-func (hmd *Hmd) ResetFrameTiming(frameIndex uint) {
+func (hmd *Hmd) ResetFrameTiming(frameIndex int) {
 	C.ovrHmd_ResetFrameTiming(hmd.cptr(), C.uint(frameIndex))
 }
 
