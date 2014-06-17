@@ -1,6 +1,7 @@
 package ovr
 
 //#include "OVR_CAPI.h"
+//#include "OVR_CAPI_GL.h"
 import "C"
 
 type Vector2i C.ovrVector2i
@@ -29,5 +30,10 @@ type RenderApiConfigHeader C.ovrRenderAPIConfigHeader
 type RenderApiConfig C.ovrRenderAPIConfig
 type TextureHeader C.ovrTextureHeader
 type Texture C.ovrTexture
+
+type GLConfigData C.ovrGLConfigData
+type GLTextureData C.ovrGLTextureData
+type GLTexture C.ovrGLTexture
+type GLConfig C.union_ovrGLConfig
 
 //type HmdDesc C.ovrHmdDesc

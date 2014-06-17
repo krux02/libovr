@@ -108,3 +108,12 @@ type Texture struct {
 	Pad_cgo_0    [4]byte
 	PlatformData [8]uint64
 }
+type GLConfigData struct {
+	Header RenderApiConfigHeader
+}
+type GLTextureData struct {
+	Header TextureHeader
+	TexId  uint32
+}
+type GLTexture [96]byte
+type GLConfig [80]byte
