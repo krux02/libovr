@@ -1,6 +1,6 @@
 package ovr
 
-//#cgo LDFLAGS: -lovr -ludev -lGL -lX11 -lm -lstdc++ -lXrandr -LLib/Linux/Release/x86_64/
+//#cgo LDFLAGS: ../../../github.com/krux02/libovr/Lib/Linux/Release/x86_64/libovr.a -ludev -lGL -lX11 -lm -lstdc++ -lXrandr
 //#include "OVR_CAPI.h"
 //#include "stdlib.h"
 import "C"
@@ -692,6 +692,15 @@ func (hmd *Hmd) GetFloatArray(propertyName string) []float32 {
 	return values
 }
 
+func (hmd *Hmd) GetFloatArray2(propertyName string, values []float32) []float32 {
+	_propertyName := C.CString(propertyName)
+	defer C.free(unsafe.Pointer(_propertyName))
+	arraySize := C.uint(cap(values))
+	arrayPtr := (*C.float)(&values[0])
+	size := C.ovrHmd_GetFloatArray(hmd.cptr(), _propertyName, arrayPtr, arraySize)
+	return values[:size]
+}
+
 func (hmd *Hmd) SetFloatArray(propertyName string, values []float32) bool {
 	arraySize := C.uint(len(values))
 	_values := (*C.float)(&values[0])
@@ -710,5 +719,3 @@ func (hmd *Hmd) GetString(propertyName string, defaultValue string) string {
 		return C.GoString(str)
 	}
 }
-
-//
