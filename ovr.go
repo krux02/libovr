@@ -295,6 +295,9 @@ func (this *Hmd) Destroy() {
 }
 
 //ovrHmd   ovrHmd_CreateDebug(ovrHmdType type);
+func HmdCreateDebug(hmdType HmdType) *Hmd {
+	return hmd(C.ovrHmd_CreateDebug(C.ovrHmdType(hmdType)))
+}
 
 // Returns last error for HMD state. Returns null for no error.
 // String is valid until next call or GetLastError or HMD is destroyed.
