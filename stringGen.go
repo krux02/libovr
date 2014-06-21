@@ -35,9 +35,6 @@ func (value HmdType) String() string {
 }
 
 func (value HmdCaps) String() string {
-	if value&HmdCap_Writable_Mask != value {
-		panic("invalid HmdCaps")
-	}
 
 	caps := [...]HmdCaps{
 		HmdCap_Present,

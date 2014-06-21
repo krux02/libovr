@@ -3,6 +3,8 @@ package ovr
 //#include "OVR_CAPI.h"
 import "C"
 
+import "unsafe"
+
 /*
 type HmdDesc struct {
 	Handle            *Hmd
@@ -67,11 +69,11 @@ type HmdDesc struct {
 //type Hmd C.struct_ovrHmdStruct
 
 func hmd(h C.ovrHmd) *Hmd {
-	return (*Hmd)((*C.struct_ovrHmdStruct)(h))
+	return (*Hmd)(unsafe.Pointer(h))
 }
 
 func (this *Hmd) cptr() C.ovrHmd {
-	return C.ovrHmd((*C.struct_ovrHmdStruct)(this))
+	return C.ovrHmd(unsafe.Pointer(this))
 }
 
 func hmdDesc(that C.ovrHmdDesc) (this HmdDesc) {

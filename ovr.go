@@ -62,12 +62,11 @@ func c_quatf(that Quatf) (this C.ovrQuatf) {
 }
 
 func matrix4f(that C.ovrMatrix4f) (this Matrix4f) {
-	for i := 0; i < 4; i++ {
-		for j := 0; j < 4; j++ {
-			this.M[i][j] = float32(that.M[i][j])
-		}
-	}
-	return
+	return *(*Matrix4f)(unsafe.Pointer(&that))
+}
+
+func (mat Matrix4f) FlatArray() (out [16]float32) {
+	return *(*[16]float32)(unsafe.Pointer(&mat))
 }
 
 func c_matrix4f(that Matrix4f) (this C.ovrMatrix4f) {
@@ -468,7 +467,7 @@ func (this *Hmd) BeginEyeRender(eye EyeType) Posef {
 // 'renderPose' will typically be the value returned from ovrHmd_BeginEyeRender, but can
 // be different if a different pose was used for rendering.
 
-func (this *Hmd) EndEyeRender(eye EyeType, renderPose Posef, eyeTexture Texture) {
+func (this *Hmd) EndEyeRender(eye EyeType, renderPose Posef, eyeTexture *Texture) {
 	C.ovrHmd_EndEyeRender(this.cptr(), C.ovrEyeType(eye), c_posef(renderPose), eyeTexture.cptr())
 }
 
